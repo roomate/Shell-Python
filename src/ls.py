@@ -84,11 +84,10 @@ def ls(cmd: list[str]|None = None):
             print(f'ls: cannot access {os.path.basename(path)}: No such file or directory')
             exit(1)
         flags = flags[1:]
-
-    #If there is a directory but no flag
-    if flags is None:
-        ListDir(directory=path, param=param)
-        exit(0)
+        #If there is a directory but no flag
+        if flags == []:
+            ListDir(directory=path, param=param)
+            exit(0)
 
     #Check all flags starts with a - or --
     check_flag = filter(lambda x: x.startswith("-") or x.startswith("--"), flags)
@@ -99,6 +98,6 @@ def ls(cmd: list[str]|None = None):
 
     if '-i' in flags or '--inode' in flags:
         param["show_inode"] = True
-    
+
     ListDir(directory=path, param=param)
     exit(0)

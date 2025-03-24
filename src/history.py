@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import pickle as pkl
 
 class History:
