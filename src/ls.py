@@ -93,7 +93,7 @@ def ls(cmd: list[str]|None = None):
     check_flag = filter(lambda x: x.startswith("-") or x.startswith("--"), flags)
     assert False not in check_flag, "error, unsupported syntax"
 
-    if '-a' in flags or "--all" in flags:
+    if '-a' in flags or "--all" in flags: #je rajout cacou ici
         param["show_hidden"] = True
 
     if '-i' in flags or '--inode' in flags:
