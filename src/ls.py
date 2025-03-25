@@ -22,22 +22,28 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+COUNTER = 0
+
 def ListFile(d: str, param: dict):
+    global COUNTER
     if not param["show_inode"]:
         if os.path.isfile(d):
             print(d, end = " ")
         elif os.path.isdir(d):
-            print(bcolors.OKBLUE + bcolors.BOLD + d + bcolors.ENDC, end=" ")
+            print(bcolors.OKBLUE + d + bcolors.ENDC, end=" ")
     else:
         inode = os.stat(d).st_ino
         if os.path.isfile(d):
             print(inode, d, end = " ")
         elif os.path.isdir(d):
-            print(str(inode) + " " + bcolors.OKBLUE + bcolors.BOLD + d + bcolors.ENDC, end=" ")
+            print(str(inode) + " " + bcolors.OKBLUE + d + bcolors.ENDC, end=" ")
+    COUNTER += 1
+    if COUNTER == 8:
+        print("\n")
+        COUNTER = 0
 
 
 def ListDir(directory: str, Callback: Callable = ListFile, param: dict = {}):
-
 
     assert directory is not None, "Directory should not be None"
     assert callable(Callback), "Callback should be callable"
@@ -93,7 +99,7 @@ def ls(cmd: list[str]|None = None):
     check_flag = filter(lambda x: x.startswith("-") or x.startswith("--"), flags)
     assert False not in check_flag, "error, unsupported syntax"
 
-    if '-a' in flags or "--all" in flags: #je rajout cacou ici
+    if '-a' in flags or "--all" in flags:
         param["show_hidden"] = True
 
     if '-i' in flags or '--inode' in flags:
