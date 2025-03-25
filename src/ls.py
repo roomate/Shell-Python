@@ -84,7 +84,7 @@ def ls(cmd: list[str]|None = None):
         path = os.getcwd()
     else:
     #If there is a directory
-        path = os.path.abspath(flag[0]) #Get the absolute normalized path
+        path = os.path.abspath(flags[0]) #Get the absolute normalized path
         #Check this is an actual directory
         if not os.path.exists(path):
             print(f'ls: cannot access {os.path.basename(path)}: No such file or directory')

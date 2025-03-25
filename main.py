@@ -17,8 +17,10 @@ from parse import parse_cmds
 import echo
 import mkdir
 import rmdir
-import pwd
+import pwd_shell
 import man
+import bg
+import fg
 
 def terminate(hist: History|None):
     #When the shell is terminated
@@ -27,9 +29,11 @@ def terminate(hist: History|None):
     exit(0)
 
 DICT = {'echo': echo.echo, 'ls': ls.ls, 'mkdir': mkdir.mkdir,
-        'rmdir': rmdir.rmdir, 'exit': terminate, 'pwd': pwd, 'man': man.man}
+        'rmdir': rmdir.rmdir, 'exit': terminate, 'pwd': pwd_shell.pwd, 'man': man.man,
+        'bg': bg.bg, 'fg': fg.fg}
 
-#signal.signal(signal.SIGINT, signal.SIG_IGN)
+#You should remove the comment to prevent the shell from terminating because of a SIGINT signal
+# signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 def run(cmd: str):
     """
@@ -63,11 +67,10 @@ if __name__ == '__main__':
     #Get all the commands the bash can run
     scripts = set(filter(lambda x: x.endswith(".py"), os.listdir(src_folder)))
     while True:
-        # cmd = input()
+        cmd = input()
 
-        cmd = "man ls"
+        # cmd = "ls ."
         hist.append(cmd)
-
         noOfCommand, cmd = parse_cmds(cmd)
         for i in range(noOfCommand):
             current_cmd = cmd[i]
@@ -81,4 +84,4 @@ if __name__ == '__main__':
             else:
                 print(f"{current_cmd[0]}: command not found")
                 terminate(None)
-        break
+        # break
