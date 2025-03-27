@@ -48,14 +48,14 @@ def ListDir(directory: str, Callback: Callable = ListFile, param: dict = {}):
     assert directory is not None, "Directory should not be None"
     assert callable(Callback), "Callback should be callable"
     assert param != {}, "Flags should not be empty"
-
+    global COUNTER; COUNTER = 0
     files = os.listdir(directory)#Get all files and directories
     for file in files:
         if not param["show_hidden"] and file.startswith("."):
             continue
         else:
             Callback(file, param)
-    print()
+    print("\n")
 
 def ls(cmd: list[str]|None = None):
     """
@@ -77,13 +77,17 @@ def ls(cmd: list[str]|None = None):
     if flags == []:
         path = os.getcwd()
         ListDir(directory=path, param=param)
-        exit(0)
-
+        return 
     #If there is no directory
     if flags[0].startswith("-"):
         path = os.getcwd()
+    #If this is home directory
+    elif flags[0].startswith("~"):
+        path = '/home'
+    #If this is the home directory
+    elif flags[0].startswith("/"):
+        path = '/'
     else:
-    #If there is a directory
         path = os.path.abspath(flags[0]) #Get the absolute normalized path
         #Check this is an actual directory
         if not os.path.exists(path):
@@ -93,7 +97,7 @@ def ls(cmd: list[str]|None = None):
         #If there is a directory but no flag
         if flags == []:
             ListDir(directory=path, param=param)
-            exit(0)
+            return
 
     #Check all flags starts with a - or --
     check_flag = filter(lambda x: x.startswith("-") or x.startswith("--"), flags)
@@ -106,4 +110,4 @@ def ls(cmd: list[str]|None = None):
         param["show_inode"] = True
 
     ListDir(directory=path, param=param)
-    exit(0)
+    return
