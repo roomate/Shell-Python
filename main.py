@@ -4,24 +4,21 @@ Created on Sat Mar 22 12:27:58 2025
 
 @author: hugon
 """
-
 import os
 import signal
-import sys
+import src
 
-sys.path.append("/home/Projet_shell/src") #Show where files are to be fetched
-sys.path.append("/home/Projet_shell") 
+print(src.__path__) #src has a __path__ attribute because it is a package
 
-from history import History
-from parse import parse_cmds
 
-from jobs import Jobs, CHILD_PS
+os.chdir("/home/Projet_shell/src")
 
-from run import run, exec_command
-from terminate import terminate
+from src.history import History
+from src.parse import parse_cmds
 
-# signal.signal(signalnum=signal.SIGINT, handler=signal.SIG_IGN)
-signal.signal(signalnum=signal.SIGTSTP, handler=signal.SIG_IGN)
+from src.run import run, exec_command
+from src.terminate import terminate
+from src.signal_handler import interrupt_handler
 
 if __name__ == '__main__':
     if os.path.exists("hist.pkl"):
@@ -31,7 +28,11 @@ if __name__ == '__main__':
 
     #Get all the commands the bash can run
     while True:
+        signal.signal(signalnum=signal.SIGTSTP, handler=signal.SIG_IGN)
+        signal.signal(signalnum=signal.SIGINT, handler=signal.SIG_IGN)
+
         cmd = input()
+
         hist.append(cmd)
         noOfCommand, cmd = parse_cmds(cmd)
         for i in range(noOfCommand):

@@ -1,4 +1,4 @@
-from history import History
+from .history import History
 def terminate(hist: History|None):
     #When the shell is terminated
     if hist is not None:

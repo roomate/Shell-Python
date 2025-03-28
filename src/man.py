@@ -4,7 +4,7 @@ import gzip
 import os
 import time
 import signal
-from signal_handler import interrupt_handler
+from .signal_handler import interrupt_handler
 
 signal.signal(signalnum=signal.SIGTSTP, handler=interrupt_handler)
 
@@ -19,7 +19,6 @@ def man(cmd: str):
     with gzip.open(filename=os.path.join(PATH_MANUAL, manual), mode='rt', encoding = 'utf-8') as file:
         content = file.read()
     print(content)
-    time.sleep(10)
 
-if __name__=='__main__':   
+if __name__=='__main__':
     man(["man", "less"])

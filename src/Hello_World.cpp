@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <iostream>
 
 int main(int argc, char* argv[])
 {
-    std::cout<<"Hello World"<<std::endl
+    const a;
+    std::cout<<a<<std::endl;
 }
