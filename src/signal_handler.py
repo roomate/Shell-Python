@@ -1,40 +1,35 @@
 import os
+from .jobs import CHILD_BG
 import signal
-from .jobs import Jobs, CHILD_PS
 
-def terminate_handler(signal, frame):
+def child_handler(sigum, frame):
     """
-    Terminate a process. It is called when the operator type CTRL+C on its keyboard.
+    For every child process terminated, we need to make sure that it is reaped once terminated.
+    The right way to do it is using a waitpid which does not block the current process. The handler is triggered every time a process
+    is stopped or terminated.
     """
-    print("You're terminating the process.")
-    exit(0)
-
-def interrupt_handler(signum, frame):
-        """
-        Handler to put a the current process in the background AND stop it. It is called when the operator
-        type CTRL+Z on its keyboard.
-        """
-        print("You try to put the current process in the background.")
-        pid = os.fork()
-        if pid < 0:
-             raise ValueError("Unable to fork.")
-        elif pid == 0:
-            os.kill(os.getpid(), signal.SIGSTOP) #Call the newly defined handler, and stop process
-        else:
-            os.waitid(os.P_PID, pid, os.WSTOPPED) #Wait for the child process to be stopped
-            Jobs_bg = Jobs(Id=pid, status=1, index=CHILD_PS.qsize(), name=frame.f_back.f_globals['__name__']) #The Child process' name is the name of the script 
-            #triggered.
-            CHILD_PS.put(Jobs_bg)
-            print(CHILD_PS.qsize())
-            #Register the ID of the child process
-# Note: if you do NOT declare a new handler in the above function with signal.signal, then raise_signal will call the last
-#declared handler, which is the function itself. Hence, it enters in an infinite number of recursive loop!
-
-
-if __name__ == '__main__':
-    signal.signal(signalnum=signal.SIGTSTP, handler=interrupt_handler)
-    import time
-    time.sleep(20)
-    # while True:
-    #     if CHILD_PS.qsize() == 1:
-    #         exit(0)
+    # pid = os.fork()
+    # signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+    # if pid == 0:
+    #      os.execvp('ps', ['ps'])
+    # else:
+    #      pass
+    print("In the Handler")
+    while True:
+        global CHILD_BG
+        try:
+            pid, _ = os.waitpid(-1, os.WNOHANG)
+            if pid < 0:
+                print("Error, invalid process")
+                return
+            elif pid > 0:
+                    print(pid)
+                    list_id = [child.Id for child in CHILD_BG]
+                    if pid in list_id:
+                        CHILD_BG.pop(list_id.index(pid))
+                    else:
+                         break
+            else:
+                 break
+        except ChildProcessError:
+            break #No children to reap
