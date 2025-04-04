@@ -7,6 +7,7 @@ Created on Sat Mar 22 12:27:58 2025
 import os
 import signal
 import src
+import psutil
 
 print(src.__path__) #src has a __path__ attribute because it is a package
 
@@ -36,6 +37,9 @@ if __name__ == '__main__':
         signal.signal(signal.SIGCHLD, handler=child_handler)
 
         cmd = input()
+        current_process = psutil.Process()
+        child = current_process.children(recursive=True)
+        print("child are", child)
 
         hist.append(cmd)
         noOfCommand, cmd = parse_cmds(cmd)
