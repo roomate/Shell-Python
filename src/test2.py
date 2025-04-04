@@ -1,33 +1,21 @@
 import os
 import time
 
-def create_child_process():
-    pid = os.fork()
-    if pid == 0:
-        # Child process
-        print("Child process is running...")
-        time.sleep(2)
-        print("Child process is exiting...")
-    else:
-        # Parent process
-        return pid
+# Créer un processus enfant
+pid = os.fork()
 
-def main():
-    child_pid = create_child_process()
+flags = os.WEXITED | os.WSTOPPED
 
-    # Wait for the child process to terminate
-    pid, status = os.waitpid(child_pid, 0)
-    if pid == 0:
-        print("No child process to wait for.")
-    else:
-        print(f"Child process {pid} terminated with status {status}.")
+if pid == 0:
+    # Code exécuté par le processus enfant
+    print("Je suis le processus enfant avec PID:", os.getpid())
+    time.sleep(5)  # Simuler un travail en cours
+    print("Le processus enfant termine.")
+else:
+    # Code exécuté par le processus parent
+    print("Je suis le processus parent avec PID:", os.getpid())
+    print("Attente de la fin du processus enfant avec PID:", pid)
 
-    # Try to wait for a non-existent child process
-    pid, status = os.waitpid(-1, os.WNOHANG)
-    if pid == 0:
-        print("No child process to wait for.")
-    else:
-        print(f"Child process {pid} terminated with status {status}.")
-
-if __name__ == "__main__":
-    main()
+    # Attendre que le processus enfant termine
+    pid, status = os.waitpid(pid, os.WUNTRACED)
+    print("Le processus enfant avec PID", pid, "a terminé avec le statut:", status)

@@ -7,19 +7,21 @@ from src.rmdir import rmdir
 from src.pwd_shell import pwd
 from src.man import man
 from src.bg import bg
-# import fg
+from src.fg import fg
 from src.ls import ls
 from src.cd import chdir
 from src.terminate import terminate
 import signal
 from src.jobs import jobs, CHILD_BG, Jobs
 from src.pid import pid
+import psutil
 
 src_folder = r"/home/hugon/Projects/Shell-Python/src"
 scripts = set(filter(lambda x: x.endswith(".py"), os.listdir(src_folder)))
 DICT = {'echo': echo, 'ls': ls, 'mkdir': mkdir,
         'rmdir': rmdir, 'exit': terminate, 'pwd': pwd, 'man': man,
-        'bg': bg, 'cd': chdir, 'jobs': jobs, 'pid': pid}
+        'bg': bg, 'cd': chdir, 'jobs': jobs, 'pid': pid, 'fg': fg}
+run_foreground = ["fg"] #List of processes that can not become child process.
 
 #Should be similar to os.WUNTRACED
 flags = os.WEXITED | os.WSTOPPED
@@ -96,32 +98,40 @@ def run_builtin(cmd: str):
     """
     signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_IGN)
     signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_IGN)
-    pid = os.fork()
-    if pid < 0:
-        print("Unable to fork process")
-    elif pid == 0:
-        os.setpgid(0,0)
-        os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
-        #define signal handlers
-        signal.signal(signalnum=signal.SIGTSTP, handler=signal.SIG_DFL)
-        signal.signal(signalnum=signal.SIGINT, handler=signal.SIG_DFL)
-        DICT[cmd[0]](cmd) #Launch builtin method
-        exit(0)
-    else:
-        wait = os.waitid(os.P_PID, pid, flags)
-        # Connect the process bact to the standard input.
-        os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
+    if cmd[0] not in run_foreground:
+        pid = os.fork()
+        if pid < 0:
+            print("Unable to fork process")
+        elif pid == 0:
+            os.setpgid(0,0)
+            os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
+            #define signal handlers
+            signal.signal(signalnum=signal.SIGTSTP, handler=signal.SIG_DFL)
+            signal.signal(signalnum=signal.SIGINT, handler=signal.SIG_DFL)
+            DICT[cmd[0]](cmd) #Launch builtin method
+            exit(0)
+        else:
+            wait = os.waitid(os.P_PID, pid, flags)
+            # Connect the process bact to the standard input.
+            os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
 
-        signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_DFL)
-        signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_DFL)
-        if wait.si_code == os.CLD_EXITED:
-            print(f"Success, the children process {pid} terminated normally.")
-        elif wait.si_code == os.CLD_STOPPED:
-            print(f"The children process {pid} has been stopped.")
-            J = Jobs(name=cmd[0], Id=pid, status=0, index=len(CHILD_BG))
-            CHILD_BG.append(J) #Add the new background process in the CHILD_PS list
-        elif wait.si_code == os.CLD_KILLED:
-            print(f"The children process {pid} has been killed.")
+            #Reactivate handlers
+            signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_DFL)
+            signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_DFL)
+
+            if wait.si_code == os.CLD_EXITED:
+                print(f"Success, the children process {pid} terminated normally.")
+            elif wait.si_code == os.CLD_STOPPED:
+                print(f"The children process {pid} has been stopped.")
+                J = Jobs(name=cmd[0], Id=pid, status=0, index=len(CHILD_BG))
+                CHILD_BG.append(J) #Add the new background process in the CHILD_PS list
+                current_process = psutil.Process()
+                child = current_process.children(recursive=True)
+                print("child are", child)
+            elif wait.si_code == os.CLD_KILLED:
+                print(f"The children process {pid} has been killed.")
+    else:
+        DICT[cmd[0]](cmd)
 
 def exec_command(cmd: str):
     """

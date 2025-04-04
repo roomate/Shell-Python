@@ -14,7 +14,6 @@ def child_handler(sigum, frame):
     #      os.execvp('ps', ['ps'])
     # else:
     #      pass
-    print("In the Handler")
     while True:
         global CHILD_BG
         try:
@@ -23,7 +22,6 @@ def child_handler(sigum, frame):
                 print("Error, invalid process")
                 return
             elif pid > 0:
-                    print(pid)
                     list_id = [child.Id for child in CHILD_BG]
                     if pid in list_id:
                         CHILD_BG.pop(list_id.index(pid))
