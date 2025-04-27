@@ -7,24 +7,24 @@ Created on Sat Mar 22 12:27:58 2025
 import os
 import signal
 import src
-import psutil
 
 print(src.__path__) #src has a __path__ attribute because it is a package
 
-os.chdir("/home/hugon/Projects/Shell-Python/src")
+os.chdir(r"/home/hugon/Projects/Shell-Python/src")
 
 from src.history import History
-from src.parse import parse_cmds
-
+from src.token import tokenization
+from src.piping import *
 from src.run import exec_command
 from src.terminate import terminate
 from src.signal_handler import child_handler
+from src.history import hist, History
 
 if __name__ == '__main__':
     if os.path.exists("hist.pkl"):
-        hist = History.load("hist.pkl")
+        History.load("hist.pkl")
     else:
-        hist = History(size=0, history=[])
+        History(size=0, history=[])
 
     #Get all the commands the bash can run
     while True:
@@ -37,17 +37,20 @@ if __name__ == '__main__':
         signal.signal(signal.SIGCHLD, handler=child_handler)
 
         cmd = input()
-        current_process = psutil.Process()
-        child = current_process.children(recursive=True)
-        print("child are", child)
 
         hist.append(cmd)
-        noOfCommand, cmd = parse_cmds(cmd)
+        noOfCommand, cmd = tokenization(cmd)
         for i in range(noOfCommand):
             current_cmd = cmd[i]
-            if current_cmd[0] == 'exit':
-                terminate(hist)
-            elif current_cmd[0] == "":
-                print("\n")
+            piping = check_pipe(current_cmd)
+            if piping:
+                pipe_cmd(current_cmd)
             else:
-                exec_command(current_cmd)
+                current_cmd = current_cmd.split(' ')
+
+                if current_cmd[0] == 'exit':
+                    terminate(hist)
+                elif current_cmd[0] == "":
+                    print("\n")
+                else:
+                    exec_command(current_cmd)

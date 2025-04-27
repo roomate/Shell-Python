@@ -19,6 +19,7 @@ def free_CHILD_BG():
         if ps.status == -1:
             CHILD_BG.remove(ps)
 
+
 def jobs(cmd: str):
     flags = cmd[1:]
     status = []

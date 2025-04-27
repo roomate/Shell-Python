@@ -13,5 +13,6 @@ def man(cmd: str):
     assert len(s) == 1, "There shouldn't be more than one manual."
     manual = s[0]
     os.execvp("less", ["less", os.path.join(PATH_MANUAL, manual)])
+
 if __name__=='__main__':
     man(["man", "less"])

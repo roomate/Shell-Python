@@ -11,17 +11,26 @@ from src.fg import fg
 from src.ls import ls
 from src.cd import chdir
 from src.terminate import terminate
+from src.history import history
 import signal
 from src.jobs import jobs, CHILD_BG, Jobs
 from src.pid import pid
+import re
 import psutil
 
 src_folder = r"/home/hugon/Projects/Shell-Python/src"
 scripts = set(filter(lambda x: x.endswith(".py"), os.listdir(src_folder)))
 DICT = {'echo': echo, 'ls': ls, 'mkdir': mkdir,
         'rmdir': rmdir, 'exit': terminate, 'pwd': pwd, 'man': man,
-        'bg': bg, 'cd': chdir, 'jobs': jobs, 'pid': pid, 'fg': fg}
-run_foreground = ["fg"] #List of processes that can not become child process.
+        'bg': bg, 'cd': chdir, 'jobs': jobs, 'pid': pid, 'fg': fg, "history": history}
+
+def check_bg(cmd: str):
+    b = False
+    for i, c in enumerate(cmd):
+        if "&" in c:
+            b = True
+            cmd[i] = c.replace("&", "")
+    return b
 
 #Should be similar to os.WUNTRACED
 flags = os.WEXITED | os.WSTOPPED
@@ -90,55 +99,78 @@ def run(cmd: str):
     else:
         parent_process(pid, cmd)
 
-def run_builtin(cmd: str):
+def run_bg(cmd):
     """
-    Note: 
-    Since we do not use execvp here, the child process is not replaced by a subshell (see execvp doc) and terminated.
-    That is why the exit(0) command is necessary here.
+    Run a process in background.
     """
-    signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_IGN)
-    signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_IGN)
-    if cmd[0] not in run_foreground:
-        pid = os.fork()
-        if pid < 0:
-            print("Unable to fork process")
-        elif pid == 0:
-            os.setpgid(0,0)
-            os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
-            #define signal handlers
-            signal.signal(signalnum=signal.SIGTSTP, handler=signal.SIG_DFL)
-            signal.signal(signalnum=signal.SIGINT, handler=signal.SIG_DFL)
-            DICT[cmd[0]](cmd) #Launch builtin method
+    global CHILD_BG
+    pid = os.fork()
+    cmd[-1] = cmd[-1].replace("&", "")
+    if pid == 0:
+        if (cmd[0] + ".py") in scripts:
+            DICT[cmd[0]](cmd)
             exit(0)
         else:
-            wait = os.waitid(os.P_PID, pid, flags)
-            # Connect the process bact to the standard input.
-            os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
-
-            #Reactivate handlers
-            signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_DFL)
-            signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_DFL)
-
-            if wait.si_code == os.CLD_EXITED:
-                print(f"Success, the children process {pid} terminated normally.")
-            elif wait.si_code == os.CLD_STOPPED:
-                print(f"The children process {pid} has been stopped.")
-                J = Jobs(name=cmd[0], Id=pid, status=0, index=len(CHILD_BG))
-                CHILD_BG.append(J) #Add the new background process in the CHILD_PS list
-                current_process = psutil.Process()
-                child = current_process.children(recursive=True)
-                print("child are", child)
-            elif wait.si_code == os.CLD_KILLED:
-                print(f"The children process {pid} has been killed.")
+            cmd.pop()
+            try:
+                os.execvp(cmd[0], cmd)
+            except FileNotFoundError:
+                print(cmd[0] + ': command not found')
+                sys.exit(1)
     else:
-        DICT[cmd[0]](cmd)
+        CHILD_BG.append(Jobs(name=cmd[0], Id=pid, status=0,index=len(CHILD_BG)))
+        os.waitpid(pid, os.WNOHANG) #Do not wait the process to terminate
 
 def exec_command(cmd: str):
     """
     Putting a process in the background can be complex, because we have to deal with multithreading, and it implies
     dealing with signal, whose behaviour can be tricky to grasp.
     """
-    if (cmd[0] + ".py") in scripts:
-        run_builtin(cmd)
+    b = check_bg(cmd)
+    if b:
+        run_bg(cmd)
+    elif (cmd[0] + ".py") in scripts:
+        DICT[cmd[0]](cmd)
     else:
         run(cmd)
+
+# def run_builtin(cmd: str):
+#     """
+#     Note:
+#     Since we do not use execvp here, the child process is not replaced by a subshell (see execvp doc) and terminated.
+#     That is why the exit(0) command is necessary here.
+#     """
+#     signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_IGN)
+#     signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_IGN)
+#     if cmd[0] not in run_foreground:
+#         pid = os.fork()
+#         if pid < 0:
+#             print("Unable to fork process")
+#         elif pid == 0:
+#             #Split away this group of process from the parent process.
+#             os.setpgid(0,0)
+#             #Give the control of terminal at this group of process.
+#             os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
+#             #define signal handlers
+#             signal.signal(signalnum=signal.SIGTSTP, handler=signal.SIG_DFL)
+#             signal.signal(signalnum=signal.SIGINT, handler=signal.SIG_DFL)
+#             DICT[cmd[0]](cmd) #Launch builtin method
+#             exit(0)
+#         else:
+#             wait = os.waitid(os.P_PID, pid, flags)
+#             # Connect the process bact to the standard input.
+#             os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
+#             #Reactivate handlers
+#             signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_DFL)
+#             signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_DFL)
+
+#             if wait.si_code == os.CLD_EXITED:
+#                 print(f"Success, the children process {pid} terminated normally.")
+#             elif wait.si_code == os.CLD_STOPPED:
+#                 print(f"The children process {pid} has been stopped.")
+#                 J = Jobs(name=cmd[0], Id=pid, status=0, index=len(CHILD_BG))
+#                 CHILD_BG.append(J) #Add the new background process in the CHILD_PS list
+#             elif wait.si_code == os.CLD_KILLED:
+#                 print(f"The children process {pid} has been killed.")
+#     else:
+#         DICT[cmd[0]](cmd)

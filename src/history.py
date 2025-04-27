@@ -1,14 +1,17 @@
 import pickle as pkl
 
 class History:
-    def __init__(self, size: int, history: list[str] = []):
+    def __init__(self, size: int = 0, history: list[str] = []):
         self.size = size
         self.history = history
 
     def append(self, cmd: str):
         self.size += 1
         self.history.append(cmd)
-    
+
+    def __len__(self):
+        return len(self.history)
+
     def __getstate__(self):
         """
         Override the default behaviour for loading pickle file.
@@ -22,8 +25,24 @@ class History:
 
     @staticmethod
     def load(filename: str):
-        with open(filename, "rb") as file:
-            return pkl.load(file)
+        global hist
+        try:
+            with open(filename, "rb") as file:
+                tmp = pkl.load(file)
+            hist.size = tmp.size
+            hist.history = tmp.history
+        except FileNotFoundError:
+            pass
+
+hist = History()
+
+def history(cmd: str):
+    global hist
+    if len(hist) == 0:
+        return
+    else:
+        for i, h in enumerate(hist.history):
+            print(i, h)
 
 if __name__=='__main__':
     test = History(4, ['ok', "salut", "op", "ii"])
