@@ -6,4 +6,16 @@ Here is my own Linux Shell, written in Python. At the most basic level, a shell 
 | --- | --- | --- |
 | cd | Change the current working directory | os.chdir | 
 | ls | Display all the files in the current working directory | os.listdir|
-| ---| ---| --- |
+| bg | Move jobs to the background | |
+| fg | Move jobs to the foreground | |
+| mkdir | Create a directory in the current working directory | os.mkdir |
+| echo | echo the string to standard output | print |
+| pwd shell | Print the working directory | os.getpwd | 
+| rmdir | Remove a directory | os.rmdir |
+| terminate | Terminate the shell | |
+| man | Display the manual related to a command | |
+| ln | Create a hard or symbolink link | os.link & os.symlink |
+| history | Display a browsable history of the past commands | |
+| jobs | Display all the jobs | |
+
+
