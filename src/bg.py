@@ -15,9 +15,7 @@ def bg(cmd: str):
      if len(cmd) == 1:
           child_ps = CHILD_BG[-1]
           proc = psutil.Process(child_ps.Id)
-          print(proc.status())
           os.kill(child_ps.Id, signal.SIGCONT)
-          print(proc.status())
      else:
           pid = cmd[1]
           try:

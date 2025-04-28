@@ -6,6 +6,7 @@ from src.mkdir import mkdir
 from src.rmdir import rmdir
 from src.pwd_shell import pwd
 from src.man import man
+from src.ln import ln
 from src.bg import bg
 from src.fg import fg
 from src.ls import ls
@@ -18,7 +19,7 @@ from src.pid import pid
 
 src_folder = r"/home/hugon/Projects/Shell-Python/src"
 scripts = set(filter(lambda x: x.endswith(".py"), os.listdir(src_folder)))
-DICT = {'echo': echo, 'ls': ls, 'mkdir': mkdir,
+DICT = {'echo': echo, 'ls': ls, 'ln': ln, 'mkdir': mkdir,
         'rmdir': rmdir, 'exit': terminate, 'pwd': pwd, 'man': man,
         'bg': bg, 'cd': chdir, 'jobs': jobs, 'pid': pid, 'fg': fg, "history": history}
 
@@ -58,7 +59,7 @@ def child_process(cmd: str):
 def parent_process(pid: int, cmd: str):
     # print(f"In parent process, Id is {os.getpid()}")
     wait = os.waitid(os.P_PID, pid, flags) #Stop waiting if child process stops or exit
-    
+
     #Connect the process bact to the standard input.
     os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
     if wait.si_code == os.CLD_EXITED:

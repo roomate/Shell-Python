@@ -29,14 +29,14 @@ def pipe_cmd(cmds: str):
     o_fd, i_fd = os.pipe()
     #First command
     cmds[0] = cmds[0].strip()
-    cmd = cmds[0].split()
+    cmd = cmds[0].split(" ")
     pid = os.fork()
     if pid == 0:
         os.setpgid(0, 0) #Call the system call setpgid() to set the process group id of the 
                         #process with id pid to the process group with id pgrp.
         os.dup2(i_fd, sys.stdout.fileno())
-        
-        #Connect the background/child process to pipe output.
+
+        #Connect the background/child process to 
         #Similar to putting it to the foreground
         os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
 
@@ -56,8 +56,7 @@ def pipe_cmd(cmds: str):
         cmd = cmd.strip()
         pid = os.fork()
         if pid == 0:
-            os.setpgid(0, 0) #Call the system call setpgid() to set the process group id of the 
-                        #process with id pid to the process group with id pgrp.
+            os.setpgid(0, 0)
             os.dup2(o_fd, sys.stdin.fileno())
             os.dup2(i_fd, sys.stdout.fileno())
 
