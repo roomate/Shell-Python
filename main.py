@@ -12,8 +12,9 @@ print(src.__path__) #src has a __path__ attribute because it is a package
 
 os.chdir(r"/home/hugon/Projects/Shell-Python/src")
 
+
 from src.history import History
-from src.token import tokenization
+from src.token_ import tokenization
 from src.piping import *
 from src.run import exec_command
 from src.terminate import terminate
@@ -36,7 +37,8 @@ if __name__ == '__main__':
         #Handler for the child process.
         signal.signal(signal.SIGCHLD, handler=child_handler)
 
-        cmd = input()
+        # cmd = input()
+        cmd = "cat text.txt | less"
 
         hist.append(cmd)
         noOfCommand, cmd = tokenization(cmd)
@@ -44,13 +46,18 @@ if __name__ == '__main__':
             current_cmd = cmd[i]
             piping = check_pipe(current_cmd)
             if piping:
+                signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_IGN)
+                signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_IGN)
                 pipe_cmd(current_cmd)
+                signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_DFL)
+                signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_DFL)
             else:
-                current_cmd = current_cmd.split(' ')
 
+                current_cmd = current_cmd.split(' ')
                 if current_cmd[0] == 'exit':
                     terminate(hist)
                 elif current_cmd[0] == "":
                     print("\n")
                 else:
                     exec_command(current_cmd)
+        break

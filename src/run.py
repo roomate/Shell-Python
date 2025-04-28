@@ -15,8 +15,6 @@ from src.history import history
 import signal
 from src.jobs import jobs, CHILD_BG, Jobs
 from src.pid import pid
-import re
-import psutil
 
 src_folder = r"/home/hugon/Projects/Shell-Python/src"
 scripts = set(filter(lambda x: x.endswith(".py"), os.listdir(src_folder)))
@@ -47,8 +45,7 @@ def child_process(cmd: str):
     #Connect the background process to the terminal standard input.
     #Similar to putting it to the foreground
     os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
-
-    #define signal handlers
+    #Set signal handlers back to default mode
     signal.signal(signalnum=signal.SIGTSTP, handler=signal.SIG_DFL)
     signal.signal(signalnum=signal.SIGINT, handler=signal.SIG_DFL)
 
@@ -61,13 +58,9 @@ def child_process(cmd: str):
 def parent_process(pid: int, cmd: str):
     # print(f"In parent process, Id is {os.getpid()}")
     wait = os.waitid(os.P_PID, pid, flags) #Stop waiting if child process stops or exit
-
+    
     #Connect the process bact to the standard input.
     os.tcsetpgrp(sys.stdin.fileno(), os.getpid())
-
-    signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_DFL)
-    signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_DFL)
-
     if wait.si_code == os.CLD_EXITED:
         print(f"Success, the children process {pid} terminated normally.")
     elif wait.si_code == os.CLD_STOPPED:
@@ -133,6 +126,9 @@ def exec_command(cmd: str):
         DICT[cmd[0]](cmd)
     else:
         run(cmd)
+        signal.signal(signalnum=signal.SIGTTIN, handler=signal.SIG_DFL)
+        signal.signal(signalnum=signal.SIGTTOU, handler=signal.SIG_DFL)
+
 
 # def run_builtin(cmd: str):
 #     """
