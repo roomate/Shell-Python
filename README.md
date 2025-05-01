@@ -21,6 +21,7 @@ Here is my own Linux Shell, written in Python. At the most basic level, a shell 
 | jobs | Display all jobs | |
 | run\_bg | Run the process in background  | |
 | check\_bg | Check there is a '&' in the line command | |
+
 The difference between built-in and non built-in methods is important because the shell program deals with them very differently. Therefore, you should be aware of some differences.
 
 ### Built-in commands
