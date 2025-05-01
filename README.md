@@ -1,8 +1,8 @@
  # A Hell of a Shell
 
-This project is my first experience dealing with the inner workings with an operating system, via Python programming language.
+This project is my first experience dealing with the inner workings of an operating system, via Python programming language.
 
-Here is my own Linux Shell, written in Python. At the most basic level, a shell is simply a command line interpreter to interact with the Operating System (OS). If one considers only this functionality, then implementing a shell is quite straightforward, you simply need to code a parser for the command line, and then make call the right command within the library **os** offered by [Python documentation](https://docs.python.org/3/library/os.html). For complicated commands, you simply execute the very same binaries as the shell, with `os.execvp` command. Now, if you want to do something a little bit more involved, you can remember that, in a shell, the commands `CTRL+C` and `CTRL+Z` can respectively stop or pause a process. Implementing this kind of behavior is much less trivial, as it relies on low-level mechanisms of the Linux OS. Another possibility is the piping of process. In my shell, I have implemented all of the above. I shall make a list of all the command I have written (built-in to **my** shell), and explain what was my programming strategy for all the above.
+Here is my own Linux Shell, written in Python. At the most basic level, a shell is simply a command line interpreter to interact with the Operating System (OS). If one considers only this functionality, then implementing a shell is quite straightforward, you simply need to code a parser for the command line, and then make call the right command within the library **os** offered by [Python documentation](https://docs.python.org/3/library/os.html). For complicated commands, you simply execute the very same binaries as the shell, with `os.execvp` command. Now, if you want to do something a little bit more involved, you can remember that, in a shell, the commands `CTRL+C` and `CTRL+Z` can respectively stop or pause a process. Implementing this kind of behavior is much less trivial, as it relies on low-level mechanisms of the GNU Linux OS. Another possibility is the piping of process. In my shell, I have implemented all of the above. You can see a list below of all the commands I have written (built-in to **my** shell), and explain what was my programming strategy for all the above.
 
 | Script | Action | Python os command |
 | --- | --- | --- |
@@ -29,8 +29,8 @@ In the GNU Linux operating system, certain shell commands, such as `cd` and `exi
 
 ### Non built-in commands 
       
-In contrast, non built-in commands do not exist within the shell application itself, they belongs to some external libraries. 
-The very majority of them are located in the GNU library **coreutils** or the **C Standard library**, written in C or Bash language. Hence, they belong to higher-level software layers of the OS . The corresponding executables are on your own computer, in the /bin directory, assuming you are on a Linux system of course. Common examples are `ls`, `ln` or `mkdir`. 
+In contrast, non built-in commands do not exist within the shell application itself, they belongs to some external software. 
+The very majority of them are located in the GNU **coreutils** or the **C Standard library**, written in C or Bash language. Hence, they belong to higher-level software layers of the OS . The corresponding executables are on your own computer, in the /bin directory, assuming you are on a Linux system of course. Common examples are `ls`, `ln` or `mkdir`. 
 Also, the shell actually `fork` the calling process into a **child** and **parent** process, meaning the binary is executed in its own environment, different to that of the shell. 
 
 Please, keep in mind that both built-in and non built-in, for the most part of them, abide by the [POSIX](https://fr.wikipedia.org/wiki/POSIX) standard. 
@@ -60,4 +60,4 @@ However, be careful, connecting a child process to the controlling terminal trig
 
 An important detail. If you pause the actual process, then you want the parent process to continue. Remember it was supposed to stay still until the child process finishes. You can code this behaviour with the right flags, available [here](https://docs.python.org/3/library/os.html#os.WEXITED). 
 
-You can resume it in the background with `bg` commands, or in the foreground with `fg`. However, if you resume it into the background, and that it finishes, you still need it to be reaped once it terminated. That's what the `child_handler` function in `signal_handler` module is for. By default deactivated, you need to use the signal `SIGCHLD`, that is triggered every time a child process is paused or terminated.
+You can resume it in the background with `bg` commands, or in the foreground with `fg`. However, if you resume it into the background, and that it finishes, you still need it to be reaped once it terminated. That's what the `child_handler` function in `signal_handler` module is for. By default deactivated, you need to use the signal [`SIGCHLD`](https://docs.python.org/3/library/signal.html#signal.SIGCHLD), that is triggered every time a child process is paused or terminated.
