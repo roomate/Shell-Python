@@ -30,7 +30,7 @@ In the GNU Linux operating system, certain shell commands, such as `cd` and `exi
 ### Non built-in commands 
       
 In contrast, non built-in commands do not exist within the shell application itself, they belongs to some external software. 
-The very majority of them are located in the GNU **coreutils** or the **C Standard library**, written in C or Bash language. Hence, they belong to higher-level software layers of the OS . The corresponding executables are on your own computer, in the /bin directory, assuming you are on a Linux system of course. Common examples are `ls`, `ln` or `mkdir`. 
+The very majority of them are located in the GNU **coreutils** or the **C Standard library**, written in C or Bash language. Hence, they belong to higher-level software layers of the OS . The corresponding executables are on your own computer, in the `/bin` directory (for Linux OS). When you call such a programm, the shell will fetch it via the `$PATH$` environment variable. Common examples are `ls`, `ln` or `mkdir`. 
 Also, the shell actually `fork` the calling process into a **child** and **parent** process, meaning the binary is executed in its own environment, different to that of the shell. 
 
 Please, keep in mind that both built-in and non built-in, for the most part of them, abide by the [POSIX](https://fr.wikipedia.org/wiki/POSIX) standard. 
