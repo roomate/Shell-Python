@@ -45,7 +45,7 @@ In practice, the parent process is said to wait for the child process with the s
 If you want a complete and visual display of the child+parent hierarchical relationship running on your computer, you can type [**pstree**](https://man7.org/linux/man-pages/man1/pstree.1.html) in your shell. 
 
 ## Signals
-[Signals](https://docs.python.org/3/library/signal.html) are a way for processes to communicate preemptively, that is, with top level priority. For example, when you type CTRL+Z on your keyboard while a foreground process is running, it is sent a signal that definitively stop it. You most often need to define signal handlers. They are functions called when a signal is sent by a process, allowing to treat, if necessary, each situation in its own manner. One can for example cite `SIGTSTP` or `SIGINT` for respectively interrupting or stopping a process. The signals are also central for multi-processing because they are heavily employed for `bg` and `fg` commands.
+[Signals](https://docs.python.org/3/library/signal.html) are a way for processes to communicate preemptively, that is, with top level priority. For example, when you type CTRL+C on your keyboard while a foreground process is running, it is sent a signal that definitively stop it. You most often need to define signal handlers. They are functions called when a signal is sent by a process, allowing to treat, if necessary, each situation in its own manner. One can for example cite `SIGTSTP` or `SIGINT` for respectively interrupting or stopping a process. The signals are also central for multi-processing because they are heavily employed for `bg` and `fg` commands.
 
 ## In practice
 
@@ -58,7 +58,7 @@ However, be careful, connecting a child process to the controlling terminal trig
 
 You still need to reactivate the signals `SIGTTIN` and `SIGTTOU` once the child process has been reaped though; and the loop is closed, the shell can go wait for another command now!
 
-Until now, I simply described what was supposed to happen if you put a single command (no fork) and without interupting the child process by any means. A complete shell should be able to treat this cases without difficulty, within the framework offered by `POSIX`.
+Until now, I simply described what was supposed to happen if you put a single command (no fork) and without interupting the child process by any means. A complete shell should be easily able to treat this cases within the framework offered by `POSIX`.
 
 ### Handling background processes
 If you pause the foreground process (by typing `man less; CTRL+Z` for example), or simply let it run in the background (via the letter `&`), then you want the parent process to continue, ignoring the child process has not actually terminated, so that it can wait for the user to enter a new command line. The child process still exists, but have its way in the background. You can observe it via a `ps -aux` command for example.  
