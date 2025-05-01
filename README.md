@@ -1,4 +1,4 @@
- A Hell of a Shell
+ # A Hell of a Shell
 
 This project is my first experience dealing with the inner workings with an operating system, via Python programming language.
 
