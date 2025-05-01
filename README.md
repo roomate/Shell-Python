@@ -47,8 +47,6 @@ If you want a complete and visual display of the child+parent hierarchical relat
 ## Signals
 [Signals](https://docs.python.org/3/library/signal.html) are a way for processes to communicate preemptively, that is, with top level priority. For example, when you type CTRL+Z on your keyboard while a foreground process is running, it is sent a signal that definitively stop it. You most often need to define signal handlers. They are functions called when a signal is sent by a process, allowing to treat, if necessary, each situation in its own manner. One can for example cite `SIGTSTP` or `SIGINT` for respectively interrupting or stopping a process. The signals are also central for multi-processing because they are heavily employed for the `bg` and `fg` commands.
 
-A group of process is a bunch of processed gathered together under same process group `pgid`, usually coinciding with the leader's `pid`.
-
 ## In practice
 
 A detail of implementation is that the bash process itself ignore the signals `SIGINT` and `SIGTSTP`. Thus, when forking, the child process inherits the signal handlers. 
@@ -56,12 +54,17 @@ A detail of implementation is that the bash process itself ignore the signals `S
 As said above, the shell operates differently for built-in and non built-in commands. For built-in commands, you just need to import the function within the script, and then call it. 
 
 For others, like briefly explained above, you first need to fork the calling process. Then, the child process is detached from the parent process group and made leader of is own process group. That is realized with [`os.setpgid`](https://docs.python.org/3/library/os.html#os.setpgid). In the child process, you thus need to reactivate these signals, because you actually want to be able to interrupt them if necessary. Also, you have to connect it to controlling terminal, which serves as both the standard input and output. 
-However, be careful, connecting a child process to the controlling terminal triggers both the signals `SIGTTIN` and `SIGTTOU`, which has the effect to stop it. You have to deactivate them beforehand. You can then execute the C script with `os.execvp`, and that's it! Or not exactly. You still need to reactivate the signals `SIGTTIN` and `SIGTTOU`.
+However, be careful, connecting a child process to the controlling terminal triggers both the signals `SIGTTIN` and `SIGTTOU` (one for the standard input, one for the standard output). It has the immediate effect to prematurely stop it, and you do not want that. As solution is to deactivate these signals just before forking. The next step is to actually execute the C program with `os.execvp`, and that's it! Whether you have an error or not, the child process terminates here, ,it fulfilled its mission. 
 
-### An important practical detail
-If you pause the foreground process (via `man less; CTRL+Z` for example), then you want the parent process to continue, so that it can wait for the user to enter a new command line. Remember; it was supposed to stay still until the child process finishes, to reap it afterwards. This "wait until you are paused or terminated" behaviour can fortunately be codedwith the flags `WEXITED` and `WSTOPPED`, available [here](https://docs.python.org/3/library/os.html#os.WEXITED). 
+You still need to reactivate the signals `SIGTTIN` and `SIGTTOU` once the child process has been reaped though; and the loop is closed, the shell can go wait for another command now!
+
+Until now, I simply described what was supposed to happen if you put a single command (no fork) and without interupting the child process by any means. A complete shell should be able to treat this cases without difficulty, within the framework offered by `POSIX`.
+
+### Handling background processes
+If you pause the foreground process (by typing `man less; CTRL+Z` for example), or simply let it run in the background (via the letter `&`), then you want the parent process to continue, ignoring the child process has not actually terminated, so that it can wait for the user to enter a new command line. The child process still exists, but have its way in the background. You can observe it via a `ps -aux` command for example.  
+But remember; the parent process was originally supposed to stay still until the child process finishes, to reap by itself its children process. This "wait until you are paused or terminated" type of behaviour can fortunately be easily coded with the flags `WEXITED` and `WSTOPPED`, see [here](https://docs.python.org/3/library/os.html#os.WEXITED). 
 
 Assume now that you enter `bg` command or `fg` in the command line interpreter. Since no parent process actually wait for it to finish anymore, it will not be reaped, and thus become a zombie process, and you do not want that. That's what the `child_handler` function in `signal_handler` module is for. By default deactivated, you need to use the signal [`SIGCHLD`](https://docs.python.org/3/library/signal.html#signal.SIGCHLD), that is triggered every time a child process is paused or terminated. You can see it in `main.py`
 
 ## Piping
-Another interesting feature of the shell is piping. Piping means connecting the input and output of a sequence of process following each other. To understand how piping work, you need to have a clear idea of what are file descriptors, and the notion of standard input/ standard output of a process.
+Another interesting feature of the shell is piping. Piping means connecting the input and output of a sequence of process following each other. To understand how piping work, you need to have a clear idea of what are file descriptors, and about the notion of standard input/standard output of a process.
