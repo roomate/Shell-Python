@@ -45,7 +45,7 @@ In practice, the parent process is said to wait for the child process with the s
 If you want a complete and visual display of the child+parent hierarchical relationship running on your computer, you can type [**pstree**](https://man7.org/linux/man-pages/man1/pstree.1.html) in your shell. 
 
 ## Signals
-[Signals](https://docs.python.org/3/library/signal.html) are the way for processes to communicate. For example, when you type CTRL+Z on your keyboard while a foreground process is running, it is sent a signal that definitively stop it. You most often need to define signal handlers. They are functions called when a signal is sent by a process. It is very useful when you need them for your accomodation. One can for example cite `SIGTSTP` or `SIGINT` for respectively interrupting or stopping a process. The signals are also central for multi-processing because they are heavily used for the `bg` and `fg` commands.
+[Signals](https://docs.python.org/3/library/signal.html) are a way for processes to communicate preemptively, that is, with top level priority. For example, when you type CTRL+Z on your keyboard while a foreground process is running, it is sent a signal that definitively stop it. You most often need to define signal handlers. They are functions called when a signal is sent by a process, allowing to treat, if necessary, each situation in its own manner. One can for example cite `SIGTSTP` or `SIGINT` for respectively interrupting or stopping a process. The signals are also central for multi-processing because they are heavily employed for the `bg` and `fg` commands.
 
 A group of process is a bunch of processed gathered together under same process group `pgid`, usually coinciding with the leader's `pid`.
 
