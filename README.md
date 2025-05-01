@@ -20,9 +20,29 @@ Here is my own Linux Shell, written in Python. At the most basic level, a shell 
 | history | Display a browsable history of the past commands | |
 | jobs | Display all the jobs | |
 
-In the Linux operating system, certain shell commands, such as **cd**, are said to be **built-in**. 
-This means that they are built directly into the OS kernel, rather than into the software layers of the OS. Other commands are usually part of the POSIX standard and are written in C. You can find the corresponding binary on your own computer, in the /bin directory, assuming you are on a Linux system of course. The POSIX methods are executed differently by the shell than the built-in ones. The most obvious is that for the former, the shell actually fork the calling process into a child and parent process. Forking is a very common mechanism for an operating system, the parent and children processes are run concurrently, the parent waiting for the child process to "terminates". "terminates" can have different meanings here, depending on the objective sought for, but the important thing to keep in mind is that **the child process have to be reaped by the parent process to be cleanly suppressed by the OS**. If the child process happens to be never reaped after terminating, it will turn into a zombie process, and might consumes resources and RAM memory for nothing. To avoid that, it is key to handle correctly signal and multi-process mechanisms. I will take the time to describe the strategy I employed just below.
+The difference between built-in and non built-in methods is important because the shell program deals with them very differently. Therefore, you should be aware of some differences.
 
-## Fork syscall
-Fork a process means replacing the calling process by a parent process and a child process. As briefly mentioned above, there roles are not symetric in the sense that the child process has to be reaped by the parent process for it to be effectively terminated. They are run concurrently by the OS, so usually, the command entered by the user will be run by the child process, while the parent process simply waits for it to finish what it has to do before reaping it. This mechanism is very classical in multi-process framework. Also, it is very easy to implement with the syscall **os.waitpid**. When forking, the child process is given its own **pid**. If you want a complete and visual display of the child+parent hierarchical relationship running on your computer, you can type **pstree** in your shell. Note that the parent and child process do not need to belong to the same group of process, even if by default, they are. I'll go more in details afterwards, because to go further, one first need to introduce the notion of signals as an inter-process channel of communication.
+### Built-in commands
+In the GNU Linux operating system, certain shell commands, such as `cd` and `exit`, are said to be shell **built-in**. A list is available [here for GNU implementation](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html). It basically means that they are directly incorporated into the shell. When you run such a command, no external application intervens, all the necessary resources are already at hands within the shell. Note also the existence of **bash** built-in commands, also frequently used in the shell, such as `echo`. Some commands can not be implemented via an external program, because they need direct access to the state of the shell process itself.
+
+### Non built-in commands 
+      
+In contrast, non built-in commands do not exist within the shell application itself, they belongs to some external libraries. 
+The very majority of them are located in the GNU library **coreutils** or the C Standard library, written in C or Bash language. Hence, they belong to higher-level software layers of the OS . The corresponding executables are on your own computer, in the /bin directory, assuming you are on a Linux system of course. Common examples are `ls`, `ln` or `mkdir`. 
+Also, the shell actually `fork` the calling process into a **child** and **parent** process, meaning the binary is executed in its own environment, different to that of the shell. 
+
+Please, keep in mind that both built-in and non built-in, for the most part of them, abide by the [POSIX](https://fr.wikipedia.org/wiki/POSIX) standard. 
+
+But what is a fork ? 
+
+## `Fork` syscall
+This syscall is a very common, yet costly, mechanism for an operating system when multi-processing comes into play, and becomes necessary.
+To fork means replacing the calling process by a parent process and a child process. The child process is given its own **pid**, while the parent process inherits the same pid as the calling process. They are both run concurrently by the OS. However, when the children process has terminated, it is not directly suppressed by the OS. It has to be reaped by the parent process beforehand. "terminated" here can have different meanings here, depending on the objective sought for, but the point here is that the child process have to let know in some way that the parent process that it can suppressed without issue by the OS. If by misfortune, the child process happens to be never reaped after terminating, it will turn into a [**zombie process**](https://en.wikipedia.org/wiki/Zombie_process), and might consumes resources and RAM memory for nothing.
+The parent process can be said to wait for the child process with the syscall [**os.waitpid**](https://docs.python.org/3/library/os.html#os.waitpid), meaning it pauses here until given the order to continue. Note that the parent and child process do not need to belong to the same group of process, even if by default, they are. 
+
+If you want a complete and visual display of the child+parent hierarchical relationship running on your computer, you can type [**pstree**](https://man7.org/linux/man-pages/man1/pstree.1.html) in your shell. 
+
 ## Signals
+[Signals](https://docs.python.org/3/library/signal.html) are the way for processes to communicate. For example, when you type CTRL+Z on your keyboard while a foreground process is running, it is sent a signal that definitively stop it. You most often need to define signal handlers, which are functions called when a signal is sent by a process. It is very useful when you need them for your accomodation. One can for example cite `SIGTSTP` or `SIGINT` for respectively interrupting or stopping a process. The signals are also central for multi-processing because they are heavily used for the `bg` and `fg` commands.
+
+A group of process is a bunch of processed gathered together under same process group `pgid`, usually coinciding with the leader's `pid`.
