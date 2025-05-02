@@ -14,7 +14,7 @@ Here is my own Linux Shell, written in Python. At the most basic level, a shell 
 | echo | echo the string to standard output | print |
 | pwd shell | Print the working directory | os.getpwd | 
 | rmdir | Remove a directory | os.rmdir |
-| terminate | Terminate the shell | |
+| terminate | Terminate the shell, serialize history beforehand | |
 | man | Display the manual related to a command | |
 | ln | Create a hard or symbolink link | os.link & os.symlink |
 | history | Display a browsable history of past commands | |
@@ -22,7 +22,7 @@ Here is my own Linux Shell, written in Python. At the most basic level, a shell 
 | run\_bg | Run the process in background  | |
 | check\_bg | Check there is a '&' in the line command | |
 
-The difference between built-in and non built-in methods is important because the shell program deals with them very differently. Therefore, you should be aware of some differences.
+The difference between built-in and non built-in methods is important because the shell program deals with them very differently. Therefore, you should be aware of their respective implementation.
 
 ### Built-in commands
 In the GNU Linux operating system, certain shell commands, such as `cd` and `exit`, are said to be shell **built-in**. A list is available [here for GNU implementation](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html). It basically means that they are directly incorporated into the shell program by itself; no external application intervenes, all the necessary resources are already at hands within the shell. Note also the existence of **bash** built-in commands, also frequently used in the shell, such as `echo`. Some commands can not be implemented via an external program, because they need direct access to the state of the shell process itself.
@@ -40,7 +40,9 @@ But what is a fork ?
 ## `Fork` syscall
 This syscall is a very common, yet costly, mechanism for an operating system when multi-processing comes into play, and becomes necessary.
 To fork means replacing the calling process by a parent process and a child process. The child process is given its own **pid**, while the parent process inherits the same pid as the calling process. They are both run concurrently by the OS. However, when the children process has terminated, it is not directly suppressed by the OS. It first has to be reaped by the parent process beforehand, saying 'I did what I supposed to do, I can go in peace'. "terminated" here can have different meanings here, depending on the objective sought for, but the point here is that the child process have to let know in some way to the parent process that it can suppressed without issue by the OS. If by misfortune, the child process happens to be never reaped after terminating, it will turn into a [**zombie process**](https://en.wikipedia.org/wiki/Zombie_process), and might consumes resources and RAM memory for nothing. You do not want that, especially when your processor happens to deals with hundreds of concurrent processes.
-In practice, the parent process is said to wait for the child process with the syscall [**os.waitpid**](https://docs.python.org/3/library/os.html#os.waitpid), meaning it temporarily pauses here until given the order to continue. Note that the parent and child process do not need to belong to the same group of process, even if by default, they are. 
+In practice, the parent process is said to wait for the child process with the syscall [**os.waitpid**](https://docs.python.org/3/library/os.html#os.waitpid), meaning it temporarily pauses here until given the order to continue. Note that the parent and child process do necessarily have to belong to the same group of process. By default though, they actually do belong to the same group of process.
+
+An obvious question now, why forking ? The answer lies once more in how non built-in methods are called by the process. The C program is ran by the syscall `execvp`. This command replaces the calling process with another one, and stops it once it executed the C file. Therefore, if you do not fork, you actually terminates your bash process after executing your command. But the shell is supposed to wait for the user to enter a new command line after executing the previous one. When forking, this is the child process that is terminated after executing the file, and that is perfectly fine, you do not want it to do something else.
 
 If you want a complete and visual display of the child+parent hierarchical relationship running on your computer, you can type [**pstree**](https://man7.org/linux/man-pages/man1/pstree.1.html) in your shell. 
 
@@ -67,4 +69,4 @@ But remember; the parent process was originally supposed to stay still until the
 Assume now that you enter `bg` command or `fg` in the command line interpreter. Since no parent process actually wait for it to finish anymore, it will not be reaped, and thus become a zombie process, and you do not want that. That's what the `child_handler` function in `signal_handler` module is for. By default deactivated, you need to use the signal [`SIGCHLD`](https://docs.python.org/3/library/signal.html#signal.SIGCHLD), that is triggered every time a child process is paused or terminated. You can see it in `main.py`
 
 ## Piping
-Another interesting feature of the shell is piping. Piping means connecting the input and output of a sequence of process following each other. To understand how piping work, you need to have a clear idea of what are file descriptors, and about the notion of standard input/standard output of a process.
+Another interesting feature of the shell is piping. Piping means connecting the input and output of a sequence of process following each other. To understand how piping work, you need to have a clear idea of what are file descriptors, and about the notion of standard input/standard output of a process. In the environment I work on, a process will have two choices to read external data: the standard input or the pipe. While it reads the standard input at first by default, you can actually change this behaviour and set the standard input as the pipe. Technically, a pipe is a temporary file (located on RAM), created with the syscall `pipe`, a returning its set of file descriptors.
