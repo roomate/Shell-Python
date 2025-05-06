@@ -64,7 +64,7 @@ However, be careful, connecting a child process to the controlling terminal trig
 
 Actually, you need to reactivate the signals `SIGTTIN` and `SIGTTOU` once the child process has been reaped. The loop is definitely closed, the shell can go wait for another command!
 
-Until now, I simply described what was supposed to happen if you put a single command (no pipe) and without interrupting the child process by any mean. A complete shell should be able to easily treat this cases within the framework offered by `POSIX` standard.
+Until now, I simply described what was supposed to happen if you put a single command (no pipe) and without interrupting the child process by any mean. A complete shell should be able to easily treat the case of pipe and interrupting within the framework offered by `POSIX` standard.
 
 ### Handling background processes
 If you pause the foreground process (by typing `man less; CTRL+Z` for example), or simply let it run in the background (via the letter `&`), then you want the parent process to continue, and wait for a new command line. Note that the child process still exists, but have its way in the background, whether running or paused. You can observe it via a `ps -aux` command for example, and read the `State` column. 
