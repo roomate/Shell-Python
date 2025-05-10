@@ -1,6 +1,6 @@
  # A Hell of a Shell
 
-This project is my first experience dealing with the workings of an operating system, via Python.
+This project is my first experience dealing with the workings of an operating system.
 
 Here is my own Linux Shell, written in Python. At the most basic level, a shell is simply a command line interpreter to interact with the Operating System (OS). I assume from now on the reader possess the very minimum knowledge on what a shell can do.
 
