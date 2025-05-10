@@ -24,7 +24,7 @@ Now, if you want to do something a little bit more involved, you might remember 
 | history | Display a browsable history of past commands | |
 | jobs | Display all jobs | |
 | run\_bg | Run the process in background  | |
-| check\_bg | Check there is a '&' in the line command | |
+| check\_bg | Check if there is a '&' in the line command | |
 
 The difference between built-in and non built-in methods is important because the shell program deals with them very differently. Therefore, you should be aware of their respective implementation.
 
