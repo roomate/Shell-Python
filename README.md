@@ -1,10 +1,10 @@
- # A Hell of a Shell
+# A Hell of a Shell
 
 This project is my first experience dealing with the workings of an operating system.
 
 Here is my own Linux Shell, written in Python. At the most basic level, a shell is simply a command line interpreter to interact with the Operating System (OS). I assume from now on the reader possess the very minimum knowledge on what a shell can do.
 
-Implementing a shell with only the capacity to run a program is quite straightforward, you simply need to code a parser for the command line, and then call the right command within the library **os** offered by [Python documentation](https://docs.python.org/3/library/os.html). Indeed, you can simply execute the very same binaries as the Linux shell, by calling it with the syscall [`os.execvp`](https://docs.python.org/3/library/os.html#os.execvp) command. 
+Implementing a shell with only the capacity to identify and run a program is quite straightforward, you simply need to code a parser for the command line, and then call the right command within the library **os** offered by [Python documentation](https://docs.python.org/3/library/os.html). Indeed, you can simply execute the very same binaries as the Linux shell, by calling it with the syscall [`os.execvp`](https://docs.python.org/3/library/os.html#os.execvp) command. 
 
 Now, if you want to do something a little bit more involved, you might remember that, in a shell, the commands `CTRL+C` and `CTRL+Z` can respectively stop or pause a process. Implementing this kind of behavior is much less trivial, as it relies on primitive mechanism of the GNU/Linux OS. Another possibility is the piping of process. In my shell, I have implemented all of the above, plus built-in programs. You can see a list below of all the commands I have written (built-in to **my** shell, and not that of the bash).
 
@@ -34,7 +34,7 @@ In the GNU Linux operating system, certain shell commands, such as `cd` and `exi
 ### Non built-in commands 
       
 In contrast, non built-in commands do not exist within the shell application itself, they belongs to some external software. 
-The very majority of them are located in the GNU **coreutils** or the **C Standard library**, written in C or Bash language. Hence, they belong to higher-level software layers of the OS. You can by the way find the corresponding executableson your own computer, in the `/bin` directory (for Linux OS). When you call such a programm, the shell will fetch it via the `$PATH` environment variable, and execute it the binary. Common examples are `ls`, `ln` or `mkdir`. 
+The very majority of them are located in the [**GNU coreutils**](https://en.wikipedia.org/wiki/GNU_Core_Utilities) or the [**GNU C Standard library**](https://en.wikipedia.org/wiki/Glibc), written in C or Bash language. Hence, they belong to higher-level software layers of the OS. You can by the way find the corresponding executableson your own computer, in the `/bin` directory (for Linux OS). When you call such a programm, the shell will fetch it via the `$PATH` environment variable, and execute it the binary. Common examples are `ls`, `ln` or `mkdir`. 
 Also, the shell actually `fork` the calling process into a **child** and **parent** process, meaning the binary is executed in its own environment, different to that of the shell. 
 
 Please, keep in mind that both built-in and non built-in, for the most part of them, abide by the [POSIX](https://fr.wikipedia.org/wiki/POSIX) standard. 
